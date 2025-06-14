@@ -16,5 +16,5 @@
 ../Core/Src/CAN_processing.c:726:6:checkReversing	5
 ../Core/Src/CAN_processing.c:747:10:computeRampTimeMs	7
 ../Core/Src/CAN_processing.c:779:6:sendCANResponse	3
-../Core/Src/CAN_processing.c:846:7:SingleExtractFloatFromCAN	1
-../Core/Src/CAN_processing.c:861:9:extract_multiple_speeds	1
+../Core/Src/CAN_processing.c:850:7:SingleExtractFloatFromCAN	1
+../Core/Src/CAN_processing.c:865:9:extract_multiple_speeds	1
