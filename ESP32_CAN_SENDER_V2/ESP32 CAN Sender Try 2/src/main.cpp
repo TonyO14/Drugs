@@ -7,7 +7,7 @@ CAN_device_t CAN_cfg; // I don't think this is changeable.
 void setup() {
   Serial.begin(115200); // Begin Serial.
   Serial.println("Serial up");
-  CAN_cfg.speed = CAN_SPEED_1000KBPS; // Set CAN speed.
+  CAN_cfg.speed = CAN_SPEED_100KBPS; // Set CAN speed.
   CAN_cfg.tx_pin_id = GPIO_NUM_4; // TX on Pin 4.
   CAN_cfg.rx_pin_id = GPIO_NUM_5; // RX on Pin 5.
   Serial.println("Speed and pins set");
