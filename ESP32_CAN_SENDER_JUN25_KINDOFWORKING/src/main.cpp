@@ -2,8 +2,8 @@
 #include <Arduino.h>
 #include <CAN.h>
 
-#define TX_PIN 14 // TX pin: 5
-#define RX_PIN 15 // RX pin: 4
+#define TX_PIN 14 // TX pin: 14
+#define RX_PIN 15 // RX pin: 15
 
 // Declare some functions that I can use to hotswap between
 // flashing the receiver board and flashing the sender board
@@ -16,7 +16,7 @@ void setup() {
 
 
   CAN.setPins(RX_PIN, TX_PIN); // Set the CAN pins.
-  CAN.begin(100E3); // Begin CAN at 100k baud rate.
+  CAN.begin(500E3); // Begin CAN at 500k baud rate.
 
   // LED Indicator
   pinMode(2, OUTPUT); // LED on pin 2. This is the internal LED.
@@ -24,13 +24,13 @@ void setup() {
 }
 
 void loop() { //Toggle whatever function depending on board.
-  SendCan();
-  //ReceiveCan();
+  // SendCan();
+  ReceiveCan();
 
 }
 
 void SendCan() {
-  CAN.beginPacket(0x23); // Set the CAN ID to be 0x12.
+  CAN.beginPacket(0x466); // Set the CAN ID to be 0x23.
   CAN.write(10); // Encode 10 in the payload.
   CAN.endPacket(); // End the CAN packet and send.
   delay(800);
@@ -43,12 +43,12 @@ void SendCan() {
 void ReceiveCan() {
  int packetSize = CAN.parsePacket();
 
-  if (packetSize) { // If a packet comes in.
+  if (packetSize != 0) { // If a packet comes in.
       for (int i=1; i<5; i++) {
         digitalWrite(2, HIGH);
-        delay(50); 
+        delay(100); 
         digitalWrite(2, LOW);
-        delay(50); // Flicker the LED
+        delay(100); // Flicker the LED
       }
   }
 }

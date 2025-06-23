@@ -73,6 +73,10 @@ static void MX_USART2_UART_Init(void);
 #include "motor.h"
 #include "pid.h"
 
+CAN_TxHeaderTypeDef TxHeader;
+uint32_t TxMailbox;
+uint16_t txID = 0x466;
+uint8_t txData[8];
 
 CAN_RxHeaderTypeDef RxHeader;
 uint8_t RxData[8];
@@ -166,6 +170,8 @@ int main(void)
     canfilterconfig.FilterScale = CAN_FILTERSCALE_32BIT;
     canfilterconfig.SlaveStartFilterBank = 0;  // 13 to 27 are assigned to slave CAN (CAN 2) OR 0 to 12 are assgned to CAN1
 
+
+
   HAL_CAN_ConfigFilter(&hcan2, &canfilterconfig);
   HAL_CAN_Start(&hcan2);
   HAL_CAN_ActivateNotification(&hcan2, CAN_IT_RX_FIFO0_MSG_PENDING);
@@ -187,11 +193,8 @@ int main(void)
 
 
 //Tony: Sending a can test message
-		CAN_TxHeaderTypeDef TxHeader;
-		uint32_t TxMailbox;
-	    uint16_t txID = 0;
-	    uint8_t txData[8];
-	 TxHeader.DLC = 8;
+
+	 TxHeader.DLC = 2;
 	 TxHeader.ExtId = 0;
 	 TxHeader.IDE = CAN_ID_STD;
 	 TxHeader.RTR = CAN_RTR_DATA;
