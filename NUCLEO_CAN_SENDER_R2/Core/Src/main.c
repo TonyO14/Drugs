@@ -124,14 +124,14 @@ int main(void)
   Error_Handler();
   }
 
-  TxHeader.StdId = 0x321;
+  TxHeader.StdId = 0x19A;
   TxHeader.ExtId = 0x01;
   TxHeader.RTR = CAN_RTR_DATA;
   TxHeader.IDE = CAN_ID_STD;
 //  TxHeader.DLC = 8; Tony: I'm changing this to one temporarily for testing.
   TxHeader.DLC = 1;
   TxHeader.TransmitGlobalTime = DISABLE;
-  TxData[0] = 33;
+  TxData[0] = -64;
 //  TxData[1] = 2;
 //  TxData[2] = 3;
 //  TxData[3] = 4;
@@ -150,7 +150,6 @@ int main(void)
     /* USER CODE BEGIN 3 */
 	  HAL_CAN_AddTxMessage(&hcan1, &TxHeader, TxData, &TxMailbox);
 	  HAL_Delay(500);
-	  TxData[7] = TxData[7] + 1;
   }
   /* USER CODE END 3 */
 }

@@ -50,7 +50,11 @@ TIM_HandleTypeDef htim8;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+CAN_TxHeaderTypeDef TxHeader;
+CAN_RxHeaderTypeDef RxHeader;
+uint8_t txData[8];
 uint8_t rxData[8];
+uint32_t TxMailbox;
 volatile int on_off  = 0;
 /* USER CODE END PV */
 
@@ -73,36 +77,10 @@ static void MX_USART2_UART_Init(void);
 #include "motor.h"
 #include "pid.h"
 
-CAN_TxHeaderTypeDef TxHeader;
-uint32_t TxMailbox;
-uint16_t txID = 0x466;
-uint8_t txData[8];
-
-CAN_RxHeaderTypeDef RxHeader;
-uint8_t RxData[8];
 int datacheck = 0;
 
-// putting some CAN receiving code here //
-
-//void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
-//	HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &RxHeader, RxData);
-//	if (RxHeader.DLC == 2) {
-//		datacheck = 1;
-//	}
-//}
 
 
-
-// Hello this is the NUCLEO copy of the steering code that is going to send messages and not
-// receive them.
-
-void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
-    // Keep reading until FIFO is empty, but only keep the last message
-    while (HAL_CAN_GetRxFifoFillLevel(hcan, CAN_RX_FIFO0) > 0) {
-        HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &RxHeader, rxData);
-    }
-    datacheck = 1;
-}
 /* USER CODE END 0 */
 
 /**
@@ -158,7 +136,7 @@ int main(void)
   CAN_FilterTypeDef canfilterconfig;
 
     canfilterconfig.FilterActivation = CAN_FILTER_ENABLE;
-    canfilterconfig.FilterBank = 10;  // anything between 0 to SlaveStartFilterBank
+    canfilterconfig.FilterBank = 0;  // anything between 0 to SlaveStartFilterBank
     canfilterconfig.FilterFIFOAssignment = CAN_FILTER_FIFO0;
 //    canfilterconfig.FilterIdHigh = 0x123<<5;
     canfilterconfig.FilterIdHigh = 0x0000;
@@ -168,7 +146,7 @@ int main(void)
     canfilterconfig.FilterMaskIdLow = 0x0; // all filters may be 0000. Figure out later.
     canfilterconfig.FilterMode = CAN_FILTERMODE_IDMASK;
     canfilterconfig.FilterScale = CAN_FILTERSCALE_32BIT;
-    canfilterconfig.SlaveStartFilterBank = 0;  // 13 to 27 are assigned to slave CAN (CAN 2) OR 0 to 12 are assgned to CAN1
+    canfilterconfig.SlaveStartFilterBank = 14;  // 13 to 27 are assigned to slave CAN (CAN 2) OR 0 to 12 are assgned to CAN1
 
 
 
@@ -176,7 +154,15 @@ int main(void)
   HAL_CAN_Start(&hcan2);
   HAL_CAN_ActivateNotification(&hcan2, CAN_IT_RX_FIFO0_MSG_PENDING);
 
+  HAL_CAN_ActivateNotification(&hcan2, CAN_IT_RX_FIFO1_MSG_PENDING);
 
+  TxHeader.StdId = 0x321;
+  TxHeader.ExtId = 0x01;
+  TxHeader.RTR = CAN_RTR_DATA;
+  TxHeader.IDE = CAN_ID_STD;
+  TxHeader.DLC = 1;
+  TxHeader.TransmitGlobalTime = DISABLE;
+  txData[0] = 1;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -192,23 +178,17 @@ int main(void)
 	  HAL_Delay(1000);*/
 
 
-//Tony: Sending a can test message
 
-	 TxHeader.DLC = 2;
-	 TxHeader.ExtId = 0;
-	 TxHeader.IDE = CAN_ID_STD;
-	 TxHeader.RTR = CAN_RTR_DATA;
- 	 TxHeader.StdId = txID;
-	  txData[0] = 100;
-	  txData[1] = 10;
-//
-//
 	  HAL_CAN_AddTxMessage(&hcan2, &TxHeader, txData, &TxMailbox);
 
 
-//	  HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+
 //	  setPIDGoalA(90);
-//	  HAL_Delay(500);
+	  HAL_Delay(500);
+
+	  if (datacheck == 1) {
+		  HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+	  }
 //	  setPIDGoalA(180);
 //	  HAL_Delay(500);
 //	  setPIDGoalA(0);
@@ -241,13 +221,7 @@ void SystemClock_Config(void)
   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLM = 4;
-  RCC_OscInitStruct.PLL.PLLN = 72;
-  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-  RCC_OscInitStruct.PLL.PLLQ = 2;
-  RCC_OscInitStruct.PLL.PLLR = 2;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -257,12 +231,12 @@ void SystemClock_Config(void)
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSE;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
   {
     Error_Handler();
   }
@@ -284,7 +258,7 @@ static void MX_CAN2_Init(void)
 
   /* USER CODE END CAN2_Init 1 */
   hcan2.Instance = CAN2;
-  hcan2.Init.Prescaler = 18;
+  hcan2.Init.Prescaler = 4;
   hcan2.Init.Mode = CAN_MODE_NORMAL;
   hcan2.Init.SyncJumpWidth = CAN_SJW_1TQ;
   hcan2.Init.TimeSeg1 = CAN_BS1_2TQ;
@@ -545,30 +519,37 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(NUCLEO_LED_GPIO_Port, NUCLEO_LED_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : NUCLEO_BUTTON_Pin */
-  GPIO_InitStruct.Pin = NUCLEO_BUTTON_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(NUCLEO_BUTTON_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : NUCLEO_LED_Pin */
-  GPIO_InitStruct.Pin = NUCLEO_LED_Pin;
+  /*Configure GPIO pin : LED_Pin */
+  GPIO_InitStruct.Pin = LED_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(NUCLEO_LED_GPIO_Port, &GPIO_InitStruct);
-
-  /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+  HAL_GPIO_Init(LED_GPIO_Port, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
   /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
+
+//void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
+//	HAL_CAN_GetRxMessage(&hcan2, CAN_RX_FIFO0, &RxHeader, rxData);
+//	datacheck = 1;
+//}
+
+void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
+    // Keep reading until FIFO is empty, but only keep the last message
+    while (HAL_CAN_GetRxFifoFillLevel(hcan, CAN_RX_FIFO0) > 0) {
+        HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &RxHeader, rxData);
+    }
+    datacheck = 1;
+}
+
+void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
+    datacheck = 2;  // Different flag to identify which FIFO
+}
 
 /**
   * @brief  Retargets the C library printf function to the USART.
@@ -587,19 +568,19 @@ PUTCHAR_PROTOTYPE
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_PIN)
 {
 
-  if (GPIO_PIN == NUCLEO_BUTTON_Pin)
-  {
-	  ParsedCANID canID = {
-			  .messageSender = MASTER,
-			  .motorType = STEERING_MOTOR,
-			  .motorConfig = SINGLE_MOTOR,
-			  .commandType = ACTION_RUN,
-			  .readSpec = READ_SPEED,
-			  .runSpec = RUN_POSITION,
-			  .motorID = RF_STEER,
-	  };
-	  HAL_GPIO_TogglePin(NUCLEO_LED_GPIO_Port, NUCLEO_LED_Pin);
-	  sendCANResponse(&canID, 1.0);
+//  if (GPIO_PIN == NUCLEO_BUTTON_Pin)
+//  {
+//	  ParsedCANID canID = {
+//			  .messageSender = MASTER,
+//			  .motorType = STEERING_MOTOR,
+//			  .motorConfig = SINGLE_MOTOR,
+//			  .commandType = ACTION_RUN,
+//			  .readSpec = READ_SPEED,
+//			  .runSpec = RUN_POSITION,
+//			  .motorID = RF_STEER,
+//	  };
+//	  HAL_GPIO_TogglePin(NUCLEO_LED_GPIO_Port, NUCLEO_LED_Pin);
+//	  sendCANResponse(&canID, 1.0);
 
 	  //Adding some junk code below to test if a basic message sends
 //	  uint8_t				TxData[8];
@@ -610,7 +591,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_PIN)
 //	  	 TxHeader.StdId = txID;
 //
 //	  HAL_CAN_AddTxMessage(&hcan2, &TxHeader, txData, &TxMailbox);
-  }
+//  }
 }
 
 
