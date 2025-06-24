@@ -188,6 +188,7 @@ int main(void)
 
 	  if (datacheck == 1) {
 		  HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+		  datacheck = 0;
 	  }
 //	  setPIDGoalA(180);
 //	  HAL_Delay(500);
