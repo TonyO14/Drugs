@@ -136,7 +136,7 @@ int main(void)
   CAN_FilterTypeDef canfilterconfig;
 
     canfilterconfig.FilterActivation = CAN_FILTER_ENABLE;
-    canfilterconfig.FilterBank = 14;  // anything between 0 to SlaveStartFilterBank for can1. can 2 opposite.
+    canfilterconfig.FilterBank = 0;  // anything between 0 to SlaveStartFilterBank
     canfilterconfig.FilterFIFOAssignment = CAN_FILTER_FIFO0;
 //    canfilterconfig.FilterIdHigh = 0x123<<5;
     canfilterconfig.FilterIdHigh = 0x0000;
@@ -179,12 +179,12 @@ int main(void)
 
 
 
-//	  HAL_CAN_AddTxMessage(&hcan2, &TxHeader, txData, &TxMailbox);
+	  HAL_CAN_AddTxMessage(&hcan2, &TxHeader, txData, &TxMailbox);
 
 
 
 //	  setPIDGoalA(90);
-//	  HAL_Delay(500);
+	  HAL_Delay(500);
 
 	  if (datacheck == 1) {
 		  HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
