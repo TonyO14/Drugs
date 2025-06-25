@@ -53,6 +53,13 @@ const float g_startupTorque = 0.15f;   // typical open-loop pull-in
 static float g_inertia     = 0.00001242f; // [kg·m^2]
 static float g_speedThresh = 50.0f;    // threshold below which we treat speed as zero
 
+// Tony debugging
+int whatsmymotorid = 0;
+int whatsmymotortype = 0;
+int whatsmyaction = 0;
+int whatsmyreadrunspec = 0;
+int johnyangle = 0;
+
 static StartWatchdog s_startWd = { .firstTick = 0, .attempts = 0 };
 
 
@@ -91,6 +98,12 @@ void CAN_Parse_MSG (CAN_RxHeaderTypeDef *rxHeader, uint8_t *rxData){
 
 	ParsedCANID CANMessage; //initialize a struct for the received message
 	uint16_t msg_ID = rxHeader->StdId;//rxHeader->Identifier & 0x07ff ; // We only care about the first 11 bits here
+	whatsmymotorid = CANMessage.motorID;
+	whatsmymotortype = CANMessage.motorType;
+	whatsmyaction = CANMessage.commandType;
+	whatsmyreadrunspec = CANMessage.runSpec;
+	setPIDGoalA(rxData[0]);
+	johnyangle = rxData[0];
 
 	// First check to see who is transmitting --> ESCS cannot command other ECSs
 	CANMessage.messageSender = (Transmitter) get_CAN_transmitter(msg_ID);
@@ -107,6 +120,7 @@ void CAN_Parse_MSG (CAN_RxHeaderTypeDef *rxHeader, uint8_t *rxData){
 	// Check the type of action to determine which field of the struct needs to be filled in
 	CANMessage.commandType = (Action) get_CAN_action(msg_ID);
 	if (CANMessage.commandType == ACTION_RUN){
+
 		////////////////////////////////////////////////////////////////////////////////////////////////////////
 //		uart_debug_print("Run Command Detected\r\n");
 		////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -126,7 +140,6 @@ void CAN_Parse_MSG (CAN_RxHeaderTypeDef *rxHeader, uint8_t *rxData){
 	if (CANMessage.motorConfig == SINGLE_MOTOR){
 		CANMessage.motorID = (MotorID) get_CAN_device_ID(msg_ID);
 		if (CANMessage.motorID == STEERING_ID){
-
 			////////////////////////////////////////////////////////////////////////////////////////////////////////
 //			uart_debug_print("Processing Single Command\r\n");
 			////////////////////////////////////////////////////////////////////////////////////////////////////////

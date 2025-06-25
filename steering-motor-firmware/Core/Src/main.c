@@ -56,6 +56,7 @@ uint8_t txData[8];
 uint8_t rxData[8];
 uint32_t TxMailbox;
 volatile int on_off  = 0;
+int STEERING_ID = RF_STEER; // Change based on what motor is being controlled!
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -78,7 +79,6 @@ static void MX_USART2_UART_Init(void);
 #include "pid.h"
 
 int datacheck = 0;
-
 
 
 /* USER CODE END 0 */
@@ -168,10 +168,10 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1){
-//	  HAL_Delay(2000);
-//	  goal = goal + 3.14/4;
-//	  goal = fmod(goal, 2*3.14);
-//	  setPIDGoalA(goal);
+	  HAL_Delay(2000);
+	  goal = goal + 3.14/4;
+	  goal = fmod(goal, 2*3.14);
+	  setPIDGoalA(goal);
 
 //	  print("%d\n\r", );
 	  /*HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
@@ -190,6 +190,8 @@ int main(void)
 		  HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
 		  datacheck = 0;
 	  }
+
+
 //	  setPIDGoalA(180);
 //	  HAL_Delay(500);
 //	  setPIDGoalA(0);
@@ -545,11 +547,9 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
     while (HAL_CAN_GetRxFifoFillLevel(hcan, CAN_RX_FIFO0) > 0) {
         HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &RxHeader, rxData);
     }
+    // Tony: Parse the CAN message
+    CAN_Parse_MSG(&RxHeader, rxData);
     datacheck = 1;
-}
-
-void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
-    datacheck = 2;  // Different flag to identify which FIFO
 }
 
 /**
