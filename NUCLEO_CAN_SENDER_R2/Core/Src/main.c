@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "CAN_processing.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -44,7 +45,7 @@ CAN_HandleTypeDef hcan1;
 
 /* USER CODE BEGIN PV */
 int whatsmybutton = 0;
-int johnyangle = 1;
+float johnyangle = 1.0;
 CAN_FilterTypeDef sFilterConfig;
 CAN_TxHeaderTypeDef TxHeader;
 CAN_RxHeaderTypeDef RxHeader;
@@ -125,21 +126,23 @@ int main(void)
   Error_Handler();
   }
 
-  TxHeader.StdId = 0x334;
+  TxHeader.StdId = 0x394;
   TxHeader.ExtId = 0x01;
   TxHeader.RTR = CAN_RTR_DATA;
   TxHeader.IDE = CAN_ID_STD;
 //  TxHeader.DLC = 8; Tony: I'm changing this to one temporarily for testing.
-  TxHeader.DLC = 1;
+  TxHeader.DLC = 8;
   TxHeader.TransmitGlobalTime = DISABLE;
-  TxData[0] = johnyangle;
-//  TxData[1] = 2;
-//  TxData[2] = 3;
-//  TxData[3] = 4;
-//  TxData[4] = 5;
-//  TxData[5] = 6;
-//  TxData[6] = 7;
-//  TxData[7] = 8; Tony: I commented these out temporarily for testing.
+//  float johnangle = 2.0;
+//  memcpy(TxData, &johnangle, sizeof(float));
+//  TxData[0] = 127;
+//  TxData[1] = 127;
+//  TxData[2] = 127;
+//  TxData[3] = 127;
+//  TxData[4] = 127;
+//  TxData[5] = 127;
+//  TxData[6] = 127;
+//  TxData[7] = johnyangle; //Tony: I commented these out temporarily for testing.
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -282,19 +285,20 @@ HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 {
 HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &RxHeader, RxData);
+CAN_Parse_MSG(&RxHeader, RxData);
 HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
 }
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	if (GPIO_Pin == GPIO_PIN_13) {
 		whatsmybutton = 30;
 	}
-	if (johnyangle != 2) {
-		johnyangle = 2;
+	if (johnyangle > 2.2) {
+		johnyangle = 2.1;
 	}
 	else {
-		johnyangle = 3;
+		johnyangle = 3.1;
 	}
-	  TxData[0] = johnyangle;
+	  memcpy(TxData, &johnyangle, sizeof(float));
 	  HAL_CAN_AddTxMessage(&hcan1, &TxHeader, TxData, &TxMailbox);
 }
 
