@@ -55,7 +55,7 @@ int whatsmymotorid = 0;
 int whatsmymotortype = 0;
 int whatsmyaction = 0;
 int whatsmyreadrunspec = 0;
-float timmyangle = 0;
+int timmyangle = 0;
 int amitriggering = 0;
 
 static StartWatchdog s_startWd = { .firstTick = 0, .attempts = 0 };

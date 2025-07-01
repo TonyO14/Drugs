@@ -64,7 +64,8 @@ void Error_Handler(void);
 #define LED_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
-
+#define TESTING_MODE
+#define TEST4
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

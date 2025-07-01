@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "CAN_processing.h"
+#include "TestList.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -126,15 +127,14 @@ int main(void)
   Error_Handler();
   }
 
-  TxHeader.StdId = 0x394;
+  TxHeader.StdId = (int)AssortedTests(0);
   TxHeader.ExtId = 0x01;
   TxHeader.RTR = CAN_RTR_DATA;
   TxHeader.IDE = CAN_ID_STD;
-//  TxHeader.DLC = 8; Tony: I'm changing this to one temporarily for testing.
   TxHeader.DLC = 8;
   TxHeader.TransmitGlobalTime = DISABLE;
-//  float johnangle = 2.0;
-//  memcpy(TxData, &johnangle, sizeof(float));
+      float johnangle = AssortedTests(1);
+      memcpy(TxData, &johnangle, sizeof(float));
 //  TxData[0] = 127;
 //  TxData[1] = 127;
 //  TxData[2] = 127;
@@ -280,7 +280,7 @@ static void MX_GPIO_Init(void)
 
 void HAL_CAN_TxMailbox0CompleteCallback(CAN_HandleTypeDef *hcan)
 {
-HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+//HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
 }
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 {
@@ -292,11 +292,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	if (GPIO_Pin == GPIO_PIN_13) {
 		whatsmybutton = 30;
 	}
-	if (johnyangle > 2.2) {
-		johnyangle = 2.1;
+	if (johnyangle != AssortedTests(1)) {
+		johnyangle = AssortedTests(1);
 	}
 	else {
-		johnyangle = 3.1;
+		johnyangle = AssortedTests(2);
 	}
 	  memcpy(TxData, &johnyangle, sizeof(float));
 	  HAL_CAN_AddTxMessage(&hcan1, &TxHeader, TxData, &TxMailbox);
